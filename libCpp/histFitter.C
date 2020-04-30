@@ -120,8 +120,8 @@ void tnpFitter::setWorkspace(std::vector<std::string> workspace) {
   _work->factory("FCONV::sigFail(x, sigPhysFail , sigResFail)");
   _work->factory(TString::Format("nSigP[%f,0.5,%f]",_nTotP*0.9,_nTotP*1.5));
   _work->factory(TString::Format("nBkgP[%f,0.5,%f]",_nTotP*0.1,_nTotP*1.5));
-  _work->factory(TString::Format("nSigF[%f,0.5,%f]",_nTotF*0.9,_nTotF*1.5));
-  _work->factory(TString::Format("nBkgF[%f,0.5,%f]",_nTotF*0.1,_nTotF*1.5));
+  _work->factory(TString::Format("nSigF[%f,0.0,%f]",_nTotF*0.9,_nTotF*1.5));
+  _work->factory(TString::Format("nBkgF[%f,0.0,%f]",_nTotF*0.1,_nTotF*1.5));
   _work->factory("SUM::pdfPass(nSigP*sigPass,nBkgP*bkgPass)");
   _work->factory("SUM::pdfFail(nSigF*sigFail,nBkgF*bkgFail)");
   _work->Print();			         

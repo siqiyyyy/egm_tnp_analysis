@@ -31,7 +31,8 @@ def isFloat( myFloat ):
 graphColors = [rt.kBlack, rt.kGray+1, rt.kRed +1, rt.kRed-2, rt.kAzure+2, rt.kAzure-1, 
                rt.kSpring-1, rt.kYellow -2 , rt.kYellow+1,
                rt.kBlack, rt.kBlack, rt.kBlack, 
-               rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack ]
+               rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack ] + \
+               [rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack, rt.kBlack ]
 
 
 
@@ -68,11 +69,11 @@ def findMinMax( effis ):
 
         
     if  maxi > 0.95:
-        maxi = 1.17        
+        maxi = 1.05
     elif maxi < 0.87:
         maxi = 0.87
     else:
-        maxi = 1.07
+        maxi = 1.05
 
     if maxi-mini > 0.5:
         maxi = maxi + 0.2
@@ -117,8 +118,8 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
     if 'pT' in xAxis or 'pt' in xAxis:
         p1.SetLogx()
         p2.SetLogx()    
-        xMin = 10
-        xMax = 500
+        xMin = 40
+        xMax = 1000
     elif 'vtx' in xAxis or 'Vtx' in xAxis or 'PV' in xAxis:
         xMin =  3
         xMax = 42
@@ -131,12 +132,15 @@ def EffiGraph1D(effDataList, effMCList, sfList ,nameout, xAxis = 'pT', yAxis = '
 
     effminmax =  findMinMax( effDataList )
     effiMin = effminmax[0]
-    effiMax = effminmax[1]
+    effiMax = effminmax[1] + 0.1
+    effiMin = 0.78
+    effiMax = 1.15
 
     sfminmax =  findMinMax( sfList )
     sfMin = sfminmax[0]
-#    sfMin = 0.94
-#    sfMax = 1.02
+    sfMax = sfminmax[1]
+    sfMin = 0.85
+    sfMax = 1.05
 
     for key in sorted(effDataList.keys()):
         grBinsEffData = effUtil.makeTGraphFromList(effDataList[key], 'min', 'max')
@@ -295,7 +299,7 @@ def doEGM_SFs(filein, lumi, axis = ['pT','eta'] ):
 
         if len(numbers) > 0 and isFloat(numbers[0]):
             etaKey = ( float(numbers[0]), float(numbers[1]) )
-            ptKey  = ( float(numbers[2]), min(500,float(numbers[3])) )
+            ptKey  = ( float(numbers[2]), min(1000,float(numbers[3])) )
         
             myeff = efficiency(ptKey,etaKey,
                                float(numbers[4]),float(numbers[5]),float(numbers[6] ),float(numbers[7] ),
