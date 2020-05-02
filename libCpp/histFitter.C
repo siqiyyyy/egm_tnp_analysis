@@ -60,8 +60,8 @@ tnpFitter::tnpFitter(TFile *filein, std::string histname   ) : _useMinos(false),
   /// but when doing MC fit in 60-120, need to zero bins outside the range
   for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ )
    if(  hPass->GetXaxis()->GetBinCenter(ib) <= 60 || hPass->GetXaxis()->GetBinCenter(ib) >= 120 ) {
-     hPass->SetBinContent(ib,0);
-     hFail->SetBinContent(ib,0);
+     //hPass->SetBinContent(ib,0);
+     //hFail->SetBinContent(ib,0);
    }
   
   _work = new RooWorkspace("w") ;
@@ -71,8 +71,8 @@ tnpFitter::tnpFitter(TFile *filein, std::string histname   ) : _useMinos(false),
   RooDataHist rooFail("hFail","hFail",*_work->var("x"),hFail);
   _work->import(rooPass) ;
   _work->import(rooFail) ;
-  _xFitMin = 60;
-  _xFitMax = 120;
+  _xFitMin = 50;
+  _xFitMax = 130;
 }
 
 tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname  ) : _useMinos(false),_fixSigmaFtoSigmaP(false) {
