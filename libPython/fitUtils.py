@@ -196,8 +196,8 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam ):
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
         "Gaussian::sigResFail(x,meanF,sigmaF)",
-        "Exponential::bkgPass(x, alphaP)",
-        "Exponential::bkgFail(x, alphaF)",
+        "Gaussian::bkgPass(x,meanbkgP,sigmabkgP)",
+        "Gaussian::bkgFail(x,meanbkgF,sigmabkgF)",
         ]
 
     tnpWorkspace = []
