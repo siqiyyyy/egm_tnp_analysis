@@ -2,6 +2,7 @@
 #include "RooWorkspace.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
+#include "RooChi2Var.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
 #include "TH1.h"
@@ -33,7 +34,7 @@ public:
   void setOutputFile(TFile *fOut ) {_fOut = fOut;}
   void fits(bool mcTruth,std::string title = "");
   void useMinos(bool minos = true) {_useMinos = minos;}
-  void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p);
+  void textParForCanvas(RooFitResult *resP, RooFitResult *resF, TPad *p, RooPlot *pPass, RooPlot *pFail);
   
   void fixSigmaFtoSigmaP(bool fix=true) { _fixSigmaFtoSigmaP= fix;}
 
@@ -85,8 +86,8 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname  ) : _useMinos
   /// but when doing MC fit in 60-120, need to zero bins outside the range
   for( int ib = 0; ib <= hPass->GetXaxis()->GetNbins()+1; ib++ )
     if(  hPass->GetXaxis()->GetBinCenter(ib) <= 60 || hPass->GetXaxis()->GetBinCenter(ib) >= 120 ) {
-      hPass->SetBinContent(ib,0);
-      hFail->SetBinContent(ib,0);
+     // hPass->SetBinContent(ib,0);
+     // hFail->SetBinContent(ib,0);
     }
   
   _work = new RooWorkspace("w") ;
@@ -96,8 +97,8 @@ tnpFitter::tnpFitter(TH1 *hPass, TH1 *hFail, std::string histname  ) : _useMinos
   RooDataHist rooFail("hFail","hFail",*_work->var("x"),hFail);
   _work->import(rooPass) ;
   _work->import(rooFail) ;
-  _xFitMin = 60;
-  _xFitMax = 120;
+  _xFitMin = 50;
+  _xFitMax = 130;
   
 }
 
@@ -167,8 +168,8 @@ void tnpFitter::fits(bool mcTruth,string title) {
   //RooFitResult* resFail = pdfFail->fitTo(*_work->data("hFail"),Minos(_useMinos),SumW2Error(kTRUE),Save());
 
 
-  RooPlot *pPass = _work->var("x")->frame(60,120);
-  RooPlot *pFail = _work->var("x")->frame(60,120);
+  RooPlot *pPass = _work->var("x")->frame(50,130);
+  RooPlot *pFail = _work->var("x")->frame(50,130);
   pPass->SetTitle("passing probe");
   pFail->SetTitle("failing probe");
   
@@ -185,7 +186,7 @@ void tnpFitter::fits(bool mcTruth,string title) {
   TCanvas c("c","c",1100,450);
   c.Divide(3,1);
   TPad *padText = (TPad*)c.GetPad(1);
-  textParForCanvas( resPass,resFail, padText );
+  textParForCanvas( resPass,resFail, padText ,pPass, pFail);
   c.cd(2); pPass->Draw();
   c.cd(3); pFail->Draw();
 
@@ -202,7 +203,7 @@ void tnpFitter::fits(bool mcTruth,string title) {
 
 
 /////// Stupid parameter dumper /////////
-void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p) {
+void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p, RooPlot *pPass, RooPlot *pFail) {
 
   double eff = -1;
   double e_eff = 0;
@@ -218,6 +219,27 @@ void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p)
   eff = nP / (nP+nF);
   e_eff = 1./(nTot*nTot) * sqrt( nP*nP* e_nF*e_nF + nF*nF * e_nP*e_nP );
 
+  RooChi2Var chi2Pass("pdfPass","chi2(Pass)",*_work->pdf("pdfPass"),*(RooDataHist*)_work->data("hPass"),Extended(),DataError(0),Verbose(true));
+  RooChi2Var chi2Fail("pdfFail","chi2(Fail)",*_work->pdf("pdfFail"),*(RooDataHist*)_work->data("hFail"),Extended(),DataError(0),Verbose(true));
+  double chi2ndfPass = chi2Pass.getVal()/(_work->var("x")->getBins() - resP->floatParsFinal().getSize());
+  double chi2ndfFail = chi2Fail.getVal()/(_work->var("x")->getBins() - resF->floatParsFinal().getSize());
+  //chi2ndfPass = _work->var("x")->getBins() - resP->floatParsFinal().getSize();
+  //chi2ndfFail = _work->var("x")->getBins() - resF->floatParsFinal().getSize();
+  //chi2ndfPass = chi2Pass.getVal();
+  //chi2ndfFail = chi2Fail.getVal();
+
+  std::cout<<"Pass chi2 from function: "<<_work->pdf("pdfPass")->createChi2(*(RooDataHist*)_work->data("hPass"),DataError(0))->getVal()<<std::endl;
+  std::cout<<"Pass chi2 from roochi2var: "<<chi2Pass.getVal()<<std::endl;
+  std::cout<<"Pass chi2 from frame: "<<pPass->chiSquare(10)<<std::endl;
+  std::cout<<"data sum = "<<((RooDataHist*)_work->data("hPass"))->sumEntries()<<std::endl;
+  std::cout<<_work->pdf("pdfPass")->expectedEvents(resP->floatParsFinal());
+  std::cout<<"Fail chi2 from function: "<<_work->pdf("pdfFail")->createChi2(*(RooDataHist*)_work->data("hFail"),DataError(0))->getVal()<<std::endl;
+  std::cout<<"Fail chi2 from roochi2var: "<<chi2Fail.getVal()<<std::endl;
+  std::cout<<"Fail chi2 from frame: "<<pFail->chiSquare(10)<<std::endl;
+  std::cout<<"data sum = "<<((RooDataHist*)_work->data("hFail"))->sumEntries()<<std::endl;
+  std::cout<<_work->pdf("pdfFail")->expectedEvents(resF->floatParsFinal());
+  //std::cout<<"pdf at 90 = "<<_work->evaluate(90);
+
   TPaveText *text1 = new TPaveText(0,0.8,1,1);
   text1->SetFillColor(0);
   text1->SetBorderSize(0);
@@ -225,6 +247,7 @@ void tnpFitter::textParForCanvas(RooFitResult *resP, RooFitResult *resF,TPad *p)
 
   text1->AddText(TString::Format("* fit status pass: %d, fail : %d",resP->status(),resF->status()));
   text1->AddText(TString::Format("* eff = %1.4f #pm %1.4f",eff,e_eff));
+  text1->AddText(TString::Format("* #chi^{2}/ndf(Pass) = %3.2f #chi^{2}/ndf(Fail) = %3.2f",chi2ndfPass,chi2ndfFail));
 
   //  text->SetTextSize(0.06);
 
