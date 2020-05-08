@@ -2,6 +2,7 @@ import ROOT as rt
 rt.gROOT.LoadMacro('./libCpp/histFitter.C+')
 rt.gROOT.LoadMacro('./libCpp/RooCBExGaussShape.cc+')
 rt.gROOT.LoadMacro('./libCpp/RooCMSShape.cc+')
+rt.gROOT.LoadMacro('./libCpp/RooParabolic.cc+')
 rt.gROOT.SetBatch(1)
 
 from ROOT import tnpFitter
@@ -47,6 +48,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam ):
     fitresF = filemc.Get( '%s_resF' % tnpBin['name'] )
 
     listOfParam = ['nF','alphaF','nP','alphaP','sigmaP','sigmaF','sigmaP_2','sigmaF_2']
+    #listOfParam = []
     
     fitPar = fitresF.floatParsFinal()
     for ipar in range(len(fitPar)):
@@ -196,8 +198,8 @@ def histFitterAltBkg( sample, tnpBin, tnpWorkspaceParam ):
     tnpWorkspaceFunc = [
         "Gaussian::sigResPass(x,meanP,sigmaP)",
         "Gaussian::sigResFail(x,meanF,sigmaF)",
-        "Gaussian::bkgPass(x,meanbkgP,sigmabkgP)",
-        "Gaussian::bkgFail(x,meanbkgF,sigmabkgF)",
+        "RooParabolic::bkgPass(x,linearP,parabolicP)",
+        "RooParabolic::bkgFail(x,linearF,parabolicF)",
         ]
 
     tnpWorkspace = []
