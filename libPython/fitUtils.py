@@ -48,7 +48,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam ):
     fitresF = filemc.Get( '%s_resF' % tnpBin['name'] )
 
     listOfParam = ['nF','alphaF','nP','alphaP','sigmaP','sigmaF','sigmaP_2','sigmaF_2']
-    #listOfParam = []
+    listOfParam = []
     
     fitPar = fitresF.floatParsFinal()
     for ipar in range(len(fitPar)):
