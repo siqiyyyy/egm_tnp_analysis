@@ -176,11 +176,13 @@ void tnpFitter::fits(bool mcTruth,string title) {
   _work->data("hPass") ->plotOn( pPass );
   _work->pdf("pdfPass")->plotOn( pPass, LineColor(kRed) );
   _work->pdf("pdfPass")->plotOn( pPass, Components("bkgPass"),LineColor(kBlue),LineStyle(kDashed));
+  //_work->pdf("pdfPass")->plotOn( pPass, Components("sigPass"),LineColor(kCyan),LineStyle(kDashed));
   _work->data("hPass") ->plotOn( pPass );
   
   _work->data("hFail") ->plotOn( pFail );
   _work->pdf("pdfFail")->plotOn( pFail, LineColor(kRed) );
   _work->pdf("pdfFail")->plotOn( pFail, Components("bkgFail"),LineColor(kBlue),LineStyle(kDashed));
+  //_work->pdf("pdfFail")->plotOn( pFail, Components("sigFail"),LineColor(kCyan),LineStyle(kDashed));
   _work->data("hFail") ->plotOn( pFail );
 
   TCanvas c("c","c",1100,450);
