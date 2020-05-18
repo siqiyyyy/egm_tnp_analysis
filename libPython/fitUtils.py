@@ -35,6 +35,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam ):
                     print '**** remove', ir
                     tnpWorkspaceParam.remove(ir)                    
             tnpWorkspaceParam.append( 'tailLeft[-1]' )
+            #tnpWorkspaceParam.append( 'tailLeft[1]' )
 
     if sample.isMC:
         return tnpWorkspaceParam
@@ -135,6 +136,99 @@ def histFitterNominal( sample, tnpBin, tnpWorkspaceParam ):
 
 
 #############################################################
+########## alternate signal fitter but fit to passing probe and fix the params when fitting failing probe
+#############################################################
+def histFitterAltSigFixFail( sample, tnpBin, tnpWorkspaceParam ):
+
+    tnpWorkspacePar = tnpWorkspaceParam
+    ### tricky: use n < 0 for high pT bin (so need to remove param and add it back)
+    cbNList = ['tailLeft']
+    ptmin = ptMin(tnpBin)        
+    if ptmin >= 35 :
+        for par in cbNList:
+            for ip in range(len(tnpWorkspacePar)):
+                x=re.compile('%s.*?' % par)
+                listToRM = filter(x.match, tnpWorkspacePar)
+                for ir in listToRM :
+                    print '**** remove', ir
+                    tnpWorkspacePar.remove(ir)                    
+            tnpWorkspacePar.append( 'tailLeft[-1]' )
+            #tnpWorkspacePar.append( 'tailLeft[1]' )
+
+    fileref = sample.altSigFit
+    filealt  = rt.TFile(fileref,'read')
+
+    from ROOT import RooFit,RooFitResult
+    fitresP = filealt.Get( '%s_resP' % tnpBin['name']  )
+
+    listOfParam = ['nF','alphaF']
+    
+    fitPar = fitresP.floatParsFinal()
+    for ipar in range(len(fitPar)):
+        pName = fitPar[ipar].GetName()
+        print '%s[%2.3f]' % (pName,fitPar[ipar].getVal())
+        for par in listOfParam:
+            if pName == par.replace('F','P'):
+                x=re.compile('%s.*?' % par)
+                listToRM = filter(x.match, tnpWorkspacePar)
+                print('removing: ', listToRM)
+                for ir in listToRM :
+                    tnpWorkspacePar.remove(ir)
+                tnpWorkspacePar.append( '%s[%2.3f]' % (par,fitPar[ipar].getVal()) )
+
+    filealt.Close()
+
+    tnpWorkspaceFunc = [
+        #"tailLeft[1]",
+        "RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
+        "RooCBExGaussShape::sigResFail(x,meanF,expr('sqrt(sigmaF*sigmaF+sosF*sosF)',{sigmaF,sosF}),alphaF,nF, expr('sqrt(sigmaF_2*sigmaF_2+sosF*sosF)',{sigmaF_2,sosF}),tailLeft)",
+        #"Gaussian::sigResPass(x,meanP,sigmaP)",
+        #"Gaussian::sigResFail(x,meanF,sigmaF)",
+        "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
+        "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
+        ]
+
+    tnpWorkspace = []
+    tnpWorkspace.extend(tnpWorkspacePar)
+    tnpWorkspace.extend(tnpWorkspaceFunc)
+        
+    ## init fitter
+    infile = rt.TFile( sample.histFile, "read")
+    hP = infile.Get('%s_Pass' % tnpBin['name'] )
+    hF = infile.Get('%s_Fail' % tnpBin['name'] )
+    if sample.isMC:
+        print("Warning: altSigFixFail is meant for fitting data only!")
+
+    fitter = tnpFitter( hP, hF, tnpBin['name'] )
+#    fitter.fixSigmaFtoSigmaP()
+    infile.Close()
+
+    ## setup
+    rootfile = rt.TFile(sample.altSigFit,'update')
+    fitter.setOutputFile( rootfile )
+    
+    ## generated Z LineShape
+    fileTruth = rt.TFile('etc/inputs/ZeeGenLevel.root','read')
+    histZLineShape = fileTruth.Get('Mass')
+    fitter.setZLineShapes(histZLineShape,histZLineShape)
+    fileTruth.Close()
+
+    ### set workspace
+    workspace = rt.vector("string")()
+    for iw in tnpWorkspace:
+        workspace.push_back(iw)
+    fitter.setWorkspace( workspace )
+
+    title = tnpBin['title'].replace(';',' - ')
+    title = title.replace('probe_sc_eta','#eta_{SC}')
+    title = title.replace('probe_Ele_pt','p_{T}')
+    fitter.fits(sample.mcTruth,title)
+
+    rootfile.Close()
+
+
+
+#############################################################
 ########## alternate signal fitter
 #############################################################
 def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
@@ -145,6 +239,8 @@ def histFitterAltSig( sample, tnpBin, tnpWorkspaceParam ):
         "tailLeft[1]",
         "RooCBExGaussShape::sigResPass(x,meanP,expr('sqrt(sigmaP*sigmaP+sosP*sosP)',{sigmaP,sosP}),alphaP,nP, expr('sqrt(sigmaP_2*sigmaP_2+sosP*sosP)',{sigmaP_2,sosP}),tailLeft)",
         "RooCBExGaussShape::sigResFail(x,meanF,expr('sqrt(sigmaF*sigmaF+sosF*sosF)',{sigmaF,sosF}),alphaF,nF, expr('sqrt(sigmaF_2*sigmaF_2+sosF*sosF)',{sigmaF_2,sosF}),tailLeft)",
+        #"Gaussian::sigResPass(x,meanP,sigmaP)",
+        #"Gaussian::sigResFail(x,meanF,sigmaF)",
         "RooCMSShape::bkgPass(x, acmsP, betaP, gammaP, peakP)",
         "RooCMSShape::bkgFail(x, acmsF, betaF, gammaF, peakF)",
         ]

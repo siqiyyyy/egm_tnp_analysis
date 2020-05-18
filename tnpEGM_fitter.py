@@ -13,6 +13,7 @@ parser.add_argument('--createBins' , action='store_true'  , help = 'create binin
 parser.add_argument('--createHists', action='store_true'  , help = 'create histograms')
 parser.add_argument('--sample'     , default='all'        , help = 'create histograms (per sample, expert only)')
 parser.add_argument('--altSig'     , action='store_true'  , help = 'alternate signal model fit')
+parser.add_argument('--altSigFixFail'     , action='store_true'  , help = 'alternate signal model fit and fix tail parameters by fitting passing probe')
 parser.add_argument('--altBkg'     , action='store_true'  , help = 'alternate background model fit')
 parser.add_argument('--doFit'      , action='store_true'  , help = 'fit sample (sample should be defined in settings.py)')
 parser.add_argument('--mcSig'      , action='store_true'  , help = 'fit MC nom [to init fit parama]')
@@ -139,6 +140,8 @@ if  args.doFit:
         if (args.binNumber >= 0 and ib == args.binNumber) or args.binNumber < 0:
             if args.altSig:                 
                 tnpRoot.histFitterAltSig(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit )
+            elif args.altSigFixFail:
+                tnpRoot.histFitterAltSigFixFail(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltSigFit )
             elif args.altBkg:
                 tnpRoot.histFitterAltBkg(  sampleToFit, tnpBins['bins'][ib], tnpConf.tnpParAltBkgFit )
             else:
@@ -153,6 +156,9 @@ if  args.doPlot:
     fileName = sampleToFit.nominalFit
     fitType  = 'nominalFit'
     if args.altSig : 
+        fileName = sampleToFit.altSigFit
+        fitType  = 'altSigFit'
+    if args.altSigFixFail : 
         fileName = sampleToFit.altSigFit
         fitType  = 'altSigFit'
     if args.altBkg : 
