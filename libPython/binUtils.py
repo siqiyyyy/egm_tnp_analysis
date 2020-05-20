@@ -52,11 +52,14 @@ def createBins( bining, cut ):
         if not cut is None:
             binCut = cut
 
+        skip = False
         for iv in range(len(ix)):
             var     = bining[iv]['var']
             bins1D  = bining[iv]['bins']
             varType = bining[iv]['type']
             if varType == 'float' :
+                if bins1D[ix[iv]] == -999 or bins1D[ix[iv]+1] == -999:
+                    skip = True # in order to skip some bins
                 if binCut is None: 
                     binCut   = '%s >= %f && %s < %f' % (var,bins1D[ix[iv]],var,bins1D[ix[iv]+1])
                     binTitle = '%1.3f < %s < %1.3f'  % (bins1D[ix[iv]],var,bins1D[ix[iv]+1])
@@ -79,6 +82,7 @@ def createBins( bining, cut ):
 
             binName = binName.replace('-','m')
             binName = binName.replace('.','p')
+        if skip: continue
 
         listOfBins.append({'cut' : binCut, 'title': binTitle, 'name' : binName, 'vars' : binVars })
         ibin = ibin + 1
