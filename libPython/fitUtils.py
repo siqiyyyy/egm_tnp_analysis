@@ -154,6 +154,8 @@ def histFitterAltSigFixFail( sample, tnpBin, tnpWorkspaceParam ):
                     tnpWorkspacePar.remove(ir)                    
             tnpWorkspacePar.append( 'tailLeft[-1]' )
             #tnpWorkspacePar.append( 'tailLeft[1]' )
+    else:
+        tnpWorkspacePar.append( 'tailLeft[1]' )
 
     fileref = sample.altSigFit
     filealt  = rt.TFile(fileref,'read')
