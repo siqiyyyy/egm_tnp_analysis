@@ -37,46 +37,7 @@ def createWorkspaceForAltSig( sample, tnpBin, tnpWorkspaceParam ):
             tnpWorkspaceParam.append( 'tailLeft[-1]' )
             #tnpWorkspaceParam.append( 'tailLeft[1]' )
 
-    if sample.isMC:
-        return tnpWorkspaceParam
 
-    
-    fileref = sample.mcRef.altSigFit
-    filemc  = rt.TFile(fileref,'read')
-
-    from ROOT import RooFit,RooFitResult
-    fitresP = filemc.Get( '%s_resP' % tnpBin['name']  )
-    fitresF = filemc.Get( '%s_resF' % tnpBin['name'] )
-
-    listOfParam = ['nF','alphaF','nP','alphaP','sigmaP','sigmaF','sigmaP_2','sigmaF_2']
-    listOfParam = []
-    
-    fitPar = fitresF.floatParsFinal()
-    for ipar in range(len(fitPar)):
-        pName = fitPar[ipar].GetName()
-        print '%s[%2.3f]' % (pName,fitPar[ipar].getVal())
-        for par in listOfParam:
-            if pName == par:
-                x=re.compile('%s.*?' % pName)
-                listToRM = filter(x.match, tnpWorkspaceParam)
-                for ir in listToRM :
-                    tnpWorkspaceParam.remove(ir)                    
-                tnpWorkspaceParam.append( '%s[%2.3f]' % (pName,fitPar[ipar].getVal()) )
-                              
-  
-    fitPar = fitresP.floatParsFinal()
-    for ipar in range(len(fitPar)):
-        pName = fitPar[ipar].GetName()
-        print '%s[%2.3f]' % (pName,fitPar[ipar].getVal())
-        for par in listOfParam:
-            if pName == par:
-                x=re.compile('%s.*?' % pName)
-                listToRM = filter(x.match, tnpWorkspaceParam)
-                for ir in listToRM :
-                    tnpWorkspaceParam.remove(ir)
-                tnpWorkspaceParam.append( '%s[%2.3f]' % (pName,fitPar[ipar].getVal()) )
-
-    filemc.Close()
 
     return tnpWorkspaceParam
 
